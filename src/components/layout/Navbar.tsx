@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Waves, LayoutDashboard, Calendar, Zap, History, Settings } from 'lucide-react';
 
 const NAV_LINKS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/session', label: 'Session', icon: Zap },
   { to: '/weekly', label: 'Weekly', icon: Calendar },
   { to: '/history', label: 'History', icon: History },
@@ -15,14 +15,14 @@ export function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800">
       <div className="max-w-6xl mx-auto px-4 flex items-center h-14">
-        <Link to="/" className="flex items-center gap-2 mr-8 shrink-0">
+        <Link to="/dashboard" className="flex items-center gap-2 mr-8 shrink-0">
           <Waves className="text-sky-400" size={22} />
           <span className="font-semibold text-white text-sm tracking-wide">SwimCoach AI</span>
         </Link>
 
         <div className="flex items-center gap-1 overflow-x-auto">
           {NAV_LINKS.map(({ to, label, icon: Icon }) => {
-            const active = pathname === to || (to !== '/' && pathname.startsWith(to));
+            const active = pathname === to || (to !== '/dashboard' && pathname.startsWith(to));
             return (
               <Link
                 key={to}
