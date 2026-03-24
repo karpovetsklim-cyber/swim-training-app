@@ -7,6 +7,9 @@ import type { SavedWorkout, Session, WeeklyPlan } from '../types';
 
 type FilterType = 'all' | 'session' | 'weekly_plan';
 
+const INPUT_CLS =
+  'bg-slate-900 border border-slate-700/40 rounded-lg text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-500/60 transition-colors';
+
 export function History() {
   const [workouts, setWorkouts] = useState<SavedWorkout[]>(getWorkouts);
   const [selected, setSelected] = useState<SavedWorkout | null>(null);
@@ -31,91 +34,87 @@ export function History() {
 
   const filtered = workouts.filter((w) => {
     const matchType = filterType === 'all' || w.type === filterType;
-    const matchSearch =
-      !search ||
-      w.label.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || w.label.toLowerCase().includes(search.toLowerCase());
     return matchType && matchSearch;
   });
 
   return (
     <div className="space-y-6">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-white mb-1">History</h1>
-        <p className="text-gray-400 text-sm">All your saved workouts.</p>
+        <p className="font-mono text-[10px] text-slate-600 uppercase tracking-[0.2em] mb-1">Archive</p>
+        <h1 className="text-3xl font-extralight text-slate-100 tracking-wide">History</h1>
+        <p className="text-sm text-slate-500 mt-1">All your saved workouts.</p>
       </div>
 
       {workouts.length === 0 ? (
-        <div className="text-center py-20 text-gray-600">
-          <Calendar size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No saved workouts yet.</p>
+        <div className="border border-slate-800/40 rounded-xl text-center py-24">
+          <Calendar size={28} className="mx-auto text-slate-700 mb-3" />
+          <p className="text-sm text-slate-600">No saved workouts yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6 items-start">
           {/* Sidebar list */}
           <div className="space-y-3">
             {/* Filters */}
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search..."
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-sky-500"
+                  className={`${INPUT_CLS} w-full pl-8 pr-3 py-2`}
                 />
               </div>
               <div className="relative">
-                <Filter size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Filter size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value as FilterType)}
-                  className="bg-gray-800 border border-gray-700 rounded-lg pl-8 pr-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-sky-500 appearance-none"
+                  className={`${INPUT_CLS} pl-8 pr-3 py-2 appearance-none`}
                 >
                   <option value="all">All</option>
                   <option value="session">Sessions</option>
-                  <option value="weekly_plan">Weekly Plans</option>
+                  <option value="weekly_plan">Weekly</option>
                 </select>
               </div>
             </div>
 
-            <p className="text-xs text-gray-500">{filtered.length} results</p>
+            <p className="font-mono text-[10px] text-slate-700 uppercase tracking-widest">
+              {filtered.length} results
+            </p>
 
             {/* List */}
-            <div className="space-y-1.5 max-h-[70vh] overflow-y-auto scrollbar-thin pr-1">
+            <div className="space-y-1 max-h-[70vh] overflow-y-auto scrollbar-thin pr-1">
               {filtered.map((w) => (
                 <button
                   key={w.id}
                   onClick={() => setSelected(w)}
-                  className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
+                  className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border transition-all duration-200 text-left ${
                     selected?.id === w.id
-                      ? 'bg-sky-900/30 border-sky-600/40'
-                      : 'bg-gray-800/40 border-gray-700/40 hover:bg-gray-800 hover:border-gray-600'
+                      ? 'border-slate-600/50 bg-slate-800/50'
+                      : 'border-slate-800/40 hover:border-slate-700/50 hover:bg-slate-900/40'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span
-                      className={`shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-xs ${
-                        w.type === 'session'
-                          ? 'bg-sky-900/60 text-sky-400'
-                          : 'bg-violet-900/60 text-violet-400'
-                      }`}
-                    >
-                      {w.type === 'session' ? <Zap size={11} /> : <Calendar size={11} />}
+                    <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded border border-slate-800/60 text-slate-500">
+                      {w.type === 'session' ? <Zap size={10} /> : <Calendar size={10} />}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm text-white truncate">{w.label}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm text-slate-200 truncate">{w.label}</p>
+                      <p className="font-mono text-[10px] text-slate-600 uppercase tracking-wider">
                         {new Date(w.savedAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={(e) => handleDelete(w.id, e)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-900/40 text-gray-600 hover:text-red-400 shrink-0"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-950/30 text-slate-700 hover:text-red-500/70 shrink-0"
                     title="Delete"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={12} />
                   </button>
                 </button>
               ))}
@@ -137,8 +136,10 @@ export function History() {
                 />
               )
             ) : (
-              <div className="text-center py-20 text-gray-600">
-                <p className="text-sm">Select a workout to view details</p>
+              <div className="border border-slate-800/40 rounded-xl text-center py-24">
+                <p className="font-mono text-[10px] text-slate-700 uppercase tracking-widest">
+                  Select a workout to view
+                </p>
               </div>
             )}
           </div>

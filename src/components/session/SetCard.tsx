@@ -1,20 +1,20 @@
 import { useState } from 'react';
-import { Pencil, Check, X, Zap, Clock, Wrench, Lightbulb } from 'lucide-react';
+import { Pencil, Check, X, Clock, Wrench } from 'lucide-react';
 import type { SwimSet } from '../../types';
 
-const EFFORT_COLORS: Record<string, string> = {
-  Easy: 'bg-green-900/40 text-green-300 border-green-700/40',
-  Moderate: 'bg-blue-900/40 text-blue-300 border-blue-700/40',
-  Strong: 'bg-yellow-900/40 text-yellow-300 border-yellow-700/40',
-  Fast: 'bg-orange-900/40 text-orange-300 border-orange-700/40',
-  MAX: 'bg-red-900/40 text-red-300 border-red-700/40',
+// Effort styles: intentionally muted to fit the slate palette
+const EFFORT_STYLES: Record<string, string> = {
+  Easy:     'text-emerald-400/70 border-emerald-900/60',
+  Moderate: 'text-sky-400/60 border-sky-900/50',
+  Strong:   'text-amber-400/60 border-amber-900/50',
+  Fast:     'text-orange-400/70 border-orange-900/60',
+  MAX:      'text-white border-slate-400/40 shadow-[0_0_8px_rgba(255,255,255,0.08)]',
 };
 
 function EffortBadge({ effort }: { effort: string }) {
-  const cls = EFFORT_COLORS[effort] ?? 'bg-gray-800 text-gray-300 border-gray-700';
+  const cls = EFFORT_STYLES[effort] ?? 'text-slate-400 border-slate-700/40';
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>
-      <Zap size={11} />
+    <span className={`font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded border ${cls}`}>
       {effort}
     </span>
   );
@@ -25,6 +25,9 @@ interface SetCardProps {
   index: number;
   onUpdate: (updated: SwimSet) => void;
 }
+
+const INPUT_CLS =
+  'w-full bg-slate-950 border border-slate-700/40 rounded px-2.5 py-1.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-500/60 focus:ring-1 focus:ring-slate-500/10';
 
 export function SetCard({ set, onUpdate }: SetCardProps) {
   const [editing, setEditing] = useState(false);
@@ -42,21 +45,21 @@ export function SetCard({ set, onUpdate }: SetCardProps) {
 
   if (editing) {
     return (
-      <div className="bg-gray-800/60 rounded-lg border border-sky-500/40 p-4 space-y-3">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-sky-400 font-medium uppercase tracking-wider">Editing</span>
+      <div className="border border-slate-600/40 bg-slate-900/60 rounded-lg p-4 space-y-3">
+        <div className="flex justify-between items-center">
+          <span className="font-mono text-[10px] text-slate-500 uppercase tracking-widest">Editing</span>
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className="flex items-center gap-1 px-2 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs"
+              className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-white text-slate-900 rounded text-xs font-medium"
             >
-              <Check size={12} /> Save
+              <Check size={11} /> Save
             </button>
             <button
               onClick={handleCancel}
-              className="flex items-center gap-1 px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-xs"
+              className="flex items-center gap-1 px-2.5 py-1 border border-slate-700/50 text-slate-400 hover:text-slate-200 rounded text-xs"
             >
-              <X size={12} /> Cancel
+              <X size={11} /> Cancel
             </button>
           </div>
         </div>
@@ -68,24 +71,26 @@ export function SetCard({ set, onUpdate }: SetCardProps) {
             ['effort', 'Effort', 'text'],
             ['rest', 'Rest', 'text'],
             ['equipment', 'Equipment', 'text'],
-            ['techniqueCue', 'Technique Cue', 'textarea'],
+            ['techniqueCue', 'Technique Cue', 'text'],
           ] as [keyof SwimSet, string, string][]
         ).map(([field, label, type]) => (
           <div key={field}>
-            <label className="block text-xs text-gray-400 mb-1">{label}</label>
+            <label className="block font-mono text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+              {label}
+            </label>
             {type === 'textarea' ? (
               <textarea
                 value={(draft[field] as string) ?? ''}
                 onChange={(e) => setDraft({ ...draft, [field]: e.target.value || null })}
                 rows={2}
-                className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-sky-500 resize-none"
+                className={INPUT_CLS + ' resize-none'}
               />
             ) : (
               <input
                 type="text"
                 value={(draft[field] as string) ?? ''}
                 onChange={(e) => setDraft({ ...draft, [field]: e.target.value || null })}
-                className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-100 focus:outline-none focus:border-sky-500"
+                className={INPUT_CLS}
               />
             )}
           </div>
@@ -95,48 +100,58 @@ export function SetCard({ set, onUpdate }: SetCardProps) {
   }
 
   return (
-    <div className="group bg-gray-800/40 hover:bg-gray-800/60 rounded-lg border border-gray-700/50 p-4 transition-colors">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <h4 className="font-semibold text-white text-sm">{set.name}</h4>
-            {set.effort && <EffortBadge effort={set.effort} />}
-            {set.volumeM > 0 && (
-              <span className="text-xs text-gray-500">{set.volumeM}m</span>
-            )}
-          </div>
+    <div className="group border-b border-slate-800/50 last:border-b-0 py-3.5 px-1 hover:bg-slate-900/30 transition-all duration-200 rounded">
+      {/* Main row */}
+      <div className="flex items-start gap-3">
+        {/* Set name — fixed width, mono uppercase label */}
+        <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider w-20 shrink-0 pt-0.5 leading-tight">
+          {set.name}
+        </span>
 
-          <p className="text-gray-300 text-sm leading-relaxed">{set.description}</p>
+        {/* Description */}
+        <p className="flex-1 text-sm text-slate-200 leading-snug min-w-0">
+          {set.description}
+        </p>
 
-          <div className="flex flex-wrap gap-3 mt-2">
-            {set.rest && (
-              <span className="flex items-center gap-1 text-xs text-gray-400">
-                <Clock size={11} className="shrink-0" /> {set.rest}
-              </span>
-            )}
-            {set.equipment && (
-              <span className="flex items-center gap-1 text-xs text-gray-400">
-                <Wrench size={11} className="shrink-0" /> {set.equipment}
-              </span>
-            )}
-          </div>
-
-          {set.techniqueCue && (
-            <div className="mt-2 flex items-start gap-1.5 bg-sky-950/40 border border-sky-800/30 rounded px-3 py-2">
-              <Lightbulb size={13} className="text-sky-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-sky-300 leading-relaxed">{set.techniqueCue}</p>
-            </div>
+        {/* Meta row — right side */}
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          {set.effort && <EffortBadge effort={set.effort} />}
+          {set.rest && (
+            <span className="flex items-center gap-1 font-mono text-[10px] text-slate-600">
+              <Clock size={10} /> {set.rest}
+            </span>
           )}
+          {set.volumeM > 0 && (
+            <span className="font-mono text-[10px] text-slate-600">{set.volumeM}m</span>
+          )}
+          {set.equipment && (
+            <span className="flex items-center gap-1 font-mono text-[10px] text-slate-600">
+              <Wrench size={10} />
+            </span>
+          )}
+          <button
+            onClick={() => { setDraft(set); setEditing(true); }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-slate-800 text-slate-600 hover:text-slate-300 shrink-0"
+            title="Edit set"
+          >
+            <Pencil size={12} />
+          </button>
         </div>
-
-        <button
-          onClick={() => { setDraft(set); setEditing(true); }}
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded hover:bg-gray-700 text-gray-500 hover:text-gray-300 shrink-0"
-          title="Edit set"
-        >
-          <Pencil size={14} />
-        </button>
       </div>
+
+      {/* Technique cue — subtle italic line */}
+      {set.techniqueCue && (
+        <p className="ml-[92px] mt-1 text-xs text-slate-500 italic leading-snug">
+          › {set.techniqueCue}
+        </p>
+      )}
+
+      {/* Equipment detail — if present, shown as small tag */}
+      {set.equipment && (
+        <p className="ml-[92px] mt-0.5 font-mono text-[10px] text-slate-600 uppercase tracking-wider">
+          {set.equipment}
+        </p>
+      )}
     </div>
   );
 }

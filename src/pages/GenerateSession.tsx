@@ -15,6 +15,9 @@ const SESSION_FOCUSES: SessionFocus[] = [
   'IM/Mixed',
 ];
 
+const INPUT_CLS =
+  'w-full bg-slate-900 border border-slate-700/40 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-500/60 focus:ring-1 focus:ring-slate-500/10';
+
 export function GenerateSession() {
   const [focus, setFocus] = useState<SessionFocus>('Power/Speed');
   const [specialRequests, setSpecialRequests] = useState('');
@@ -47,8 +50,7 @@ export function GenerateSession() {
       );
       setSession(result);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(msg);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -79,24 +81,27 @@ export function GenerateSession() {
 
   return (
     <div className="max-w-3xl space-y-6">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Generate Session</h1>
-        <p className="text-gray-400 text-sm">Pick a focus and let the AI build your workout.</p>
+        <p className="font-mono text-[10px] text-slate-600 uppercase tracking-[0.2em] mb-1">AI Coach</p>
+        <h1 className="text-3xl font-extralight text-slate-100 tracking-wide">Generate Session</h1>
+        <p className="text-sm text-slate-500 mt-1">Pick a focus and let the AI build your workout.</p>
       </div>
 
       {/* Generator form */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-4">
+      <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm p-5 space-y-5">
+        {/* Focus selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Session Focus</label>
+          <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mb-3">Session Focus</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {SESSION_FOCUSES.map((f) => (
               <button
                 key={f}
                 onClick={() => setFocus(f)}
-                className={`px-3 py-2 rounded-lg text-sm border transition-colors ${
+                className={`px-3 py-2.5 rounded-lg text-sm border transition-all duration-200 text-left ${
                   focus === f
-                    ? 'bg-sky-600/30 border-sky-500/60 text-sky-300'
-                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'
+                    ? 'border-slate-500/60 text-slate-100 bg-slate-800/60'
+                    : 'border-slate-800/50 text-slate-500 hover:border-slate-700/60 hover:text-slate-300'
                 }`}
               >
                 {f}
@@ -105,37 +110,39 @@ export function GenerateSession() {
           </div>
         </div>
 
+        {/* Special requests */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Special Requests{' '}
-            <span className="text-gray-500 font-normal">(optional)</span>
-          </label>
+          <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mb-2">
+            Notes <span className="text-slate-700">— optional</span>
+          </p>
           <input
             type="text"
             value={specialRequests}
             onChange={(e) => setSpecialRequests(e.target.value)}
-            placeholder='e.g. "no fly today, shoulder is sore" or "include block starts with bands"'
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-sky-500"
+            placeholder='e.g. "no fly today, shoulder is sore" or "include block starts"'
+            className={INPUT_CLS}
           />
         </div>
 
+        {/* CTA */}
         <button
           onClick={() => void handleGenerate()}
           disabled={loading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:bg-sky-800 disabled:opacity-60 text-white rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-white disabled:bg-slate-800 disabled:opacity-40 text-slate-950 font-medium rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]"
         >
-          <Zap size={16} />
+          <Zap size={15} />
           {loading ? 'Generating...' : 'Generate Session'}
         </button>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="flex items-start gap-3 bg-red-950/40 border border-red-700/40 rounded-xl px-4 py-3">
-          <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 border border-red-900/40 bg-red-950/20 rounded-xl px-4 py-3">
+          <AlertCircle size={16} className="text-red-500/70 shrink-0 mt-0.5" />
           <div className="min-w-0">
-            <p className="text-sm text-red-300">{error}</p>
+            <p className="text-sm text-red-400/80">{error}</p>
             {rawError && (
-              <pre className="mt-2 text-xs text-red-400/70 bg-red-950/40 rounded p-2 overflow-auto max-h-40 whitespace-pre-wrap">
+              <pre className="mt-2 text-xs text-red-400/50 bg-red-950/30 rounded p-2 overflow-auto max-h-40 whitespace-pre-wrap">
                 {rawError}
               </pre>
             )}
@@ -143,7 +150,7 @@ export function GenerateSession() {
         </div>
       )}
 
-      {loading && <LoadingSpinner label={`Generating your ${focus} session...`} />}
+      {loading && <LoadingSpinner label={`Building ${focus} session...`} />}
 
       {session && !loading && (
         <SessionView

@@ -7,11 +7,14 @@ import { getProfile, getSettings, saveWeeklyPlan } from '../lib/storage';
 import type { WeeklyPlan, TrainingPhase } from '../types';
 
 const PHASES: { value: TrainingPhase; label: string; description: string }[] = [
-  { value: 'BASE', label: 'Base', description: 'Aerobic foundation, higher volume' },
-  { value: 'BUILD', label: 'Build', description: 'Progressive intensity, race prep' },
-  { value: 'TAPER', label: 'Taper', description: 'Volume drop, maintain speed' },
+  { value: 'BASE',     label: 'Base',     description: 'Aerobic foundation, higher volume' },
+  { value: 'BUILD',    label: 'Build',    description: 'Progressive intensity, race prep' },
+  { value: 'TAPER',    label: 'Taper',    description: 'Volume drop, maintain speed' },
   { value: 'RECOVERY', label: 'Recovery', description: 'Easy, technique-focused' },
 ];
+
+const INPUT_CLS =
+  'w-full bg-slate-900 border border-slate-700/40 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-500/60 focus:ring-1 focus:ring-slate-500/10';
 
 export function GenerateWeekly() {
   const [phase, setPhase] = useState<TrainingPhase>('BUILD');
@@ -71,63 +74,74 @@ export function GenerateWeekly() {
 
   return (
     <div className="max-w-4xl space-y-6">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Generate Weekly Plan</h1>
-        <p className="text-gray-400 text-sm">Full Mon–Sat training week tailored to your phase.</p>
+        <p className="font-mono text-[10px] text-slate-600 uppercase tracking-[0.2em] mb-1">AI Coach</p>
+        <h1 className="text-3xl font-extralight text-slate-100 tracking-wide">Generate Weekly Plan</h1>
+        <p className="text-sm text-slate-500 mt-1">Full Mon–Sat training week tailored to your phase.</p>
       </div>
 
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-4">
+      {/* Form */}
+      <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm p-5 space-y-5">
+        {/* Phase selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Training Phase</label>
+          <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mb-3">Training Phase</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {PHASES.map(({ value, label, description }) => (
               <button
                 key={value}
                 onClick={() => setPhase(value)}
-                className={`flex flex-col gap-0.5 px-3 py-2.5 rounded-lg text-left border transition-colors ${
+                className={`flex flex-col gap-1 px-3 py-3 rounded-lg text-left border transition-all duration-200 ${
                   phase === value
-                    ? 'bg-violet-600/30 border-violet-500/60 text-violet-200'
-                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'
+                    ? 'border-slate-500/60 bg-slate-800/60'
+                    : 'border-slate-800/50 hover:border-slate-700/60'
                 }`}
               >
-                <span className="font-medium text-sm">{label}</span>
-                <span className="text-xs opacity-70">{description}</span>
+                <span className={`text-sm font-light ${phase === value ? 'text-slate-100' : 'text-slate-400'}`}>
+                  {label}
+                </span>
+                <span className="font-mono text-[10px] text-slate-600 uppercase tracking-wider leading-snug">
+                  {description}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
+        {/* Context */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Context <span className="text-gray-500 font-normal">(optional)</span>
-          </label>
+          <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mb-2">
+            Context <span className="text-slate-700">— optional</span>
+          </p>
           <input
             type="text"
             value={context}
             onChange={(e) => setContext(e.target.value)}
             placeholder='e.g. "competition in 2 weeks" or "coming back from a week off"'
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-violet-500"
+            className={INPUT_CLS}
           />
         </div>
 
+        {/* CTA */}
         <button
           onClick={() => void handleGenerate()}
           disabled={loading}
-          className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 disabled:opacity-60 text-white rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-white disabled:bg-slate-800 disabled:opacity-40 text-slate-950 font-medium rounded-lg transition-all duration-200 hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]"
         >
-          <Calendar size={16} />
+          <Calendar size={15} />
           {loading ? 'Generating week...' : 'Generate Weekly Plan'}
         </button>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="flex items-start gap-3 bg-red-950/40 border border-red-700/40 rounded-xl px-4 py-3">
-          <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
-          <p className="text-sm text-red-300">{error}</p>
+        <div className="flex items-start gap-3 border border-red-900/40 bg-red-950/20 rounded-xl px-4 py-3">
+          <AlertCircle size={16} className="text-red-500/70 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-400/80">{error}</p>
         </div>
       )}
 
-      {loading && <LoadingSpinner label={`Generating your ${phase} training week...`} />}
+      {loading && <LoadingSpinner label={`Building ${phase} training week...`} />}
 
       {plan && !loading && (
         <WeeklyPlanView

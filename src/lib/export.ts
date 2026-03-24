@@ -6,28 +6,30 @@ import type { Session, WeeklyPlan } from '../types';
 function sessionToMarkdown(session: Session): string {
   const lines: string[] = [
     `# ${session.day}: ${session.focus}`,
-    `**Energy System:** ${session.energySystem}  |  **Total Volume:** ${session.totalVolumeM}m`,
-    `*Generated: ${new Date(session.createdAt).toLocaleDateString()}*`,
+    `\`${session.energySystem}\` · **${session.totalVolumeM}m**`,
+    `*${new Date(session.createdAt).toLocaleDateString()}*`,
     '',
   ];
 
   if (session.specialRequests) {
-    lines.push(`> Special requests: ${session.specialRequests}`, '');
+    lines.push(`> ${session.specialRequests}`, '');
   }
 
+  // Table header
+  lines.push('| Set | Description | Effort | Rest | Vol |');
+  lines.push('|-----|-------------|--------|------|-----|');
+
   for (const set of session.sets) {
-    lines.push(`## ${set.name}`);
-    lines.push(set.description);
-    lines.push('');
-
-    const meta: string[] = [];
-    if (set.effort) meta.push(`**Effort:** ${set.effort}`);
-    if (set.rest) meta.push(`**Rest:** ${set.rest}`);
-    if (set.equipment) meta.push(`**Equipment:** ${set.equipment}`);
-    if (meta.length) lines.push(meta.join('  |  '), '');
-
+    const effort = set.effort ?? '—';
+    const rest = set.rest ?? '—';
+    const vol = set.volumeM > 0 ? `${set.volumeM}m` : '—';
+    const desc = set.description.replace(/\|/g, '\\|');
+    lines.push(`| **${set.name}** | ${desc} | ${effort} | ${rest} | ${vol} |`);
     if (set.techniqueCue) {
-      lines.push(`> **Technique:** ${set.techniqueCue}`, '');
+      lines.push(`| | *› ${set.techniqueCue.replace(/\|/g, '\\|')}* | | | |`);
+    }
+    if (set.equipment) {
+      lines.push(`| | \`${set.equipment}\` | | | |`);
     }
   }
 
@@ -37,7 +39,7 @@ function sessionToMarkdown(session: Session): string {
 function weeklyPlanToMarkdown(plan: WeeklyPlan): string {
   const lines: string[] = [
     `# ${plan.phase} Training Week`,
-    `*Generated: ${new Date(plan.createdAt).toLocaleDateString()}*`,
+    `*${new Date(plan.createdAt).toLocaleDateString()}*`,
   ];
 
   if (plan.context) lines.push(`> ${plan.context}`);
@@ -62,7 +64,7 @@ function triggerDownload(content: string, filename: string, mimeType: string): v
 
 export function exportSessionMarkdown(session: Session): void {
   const md = sessionToMarkdown(session);
-  const filename = `swim-session-${session.day.toLowerCase()}-${session.focus.replace(/\//g, '-').replace(/\s+/g, '-')}.md`;
+  const filename = `swim-${session.day.toLowerCase()}-${session.focus.replace(/\//g, '-').replace(/\s+/g, '-').toLowerCase()}.md`;
   triggerDownload(md, filename, 'text/markdown');
 }
 
@@ -71,89 +73,140 @@ export function exportWeeklyMarkdown(plan: WeeklyPlan): void {
   triggerDownload(md, `swim-week-${plan.phase.toLowerCase()}.md`, 'text/markdown');
 }
 
-// ── PDF ───────────────────────────────────────────────────────────────────────
+// ── PDF — compact workout sheet ───────────────────────────────────────────────
 
-const MARGIN = 15;
-const LINE_HEIGHT = 6;
-const PAGE_WIDTH = 210; // A4
+const M = 14;          // margin
+const PW = 210;        // page width (A4)
+const CW = PW - M * 2; // content width
+const LH = 5.5;        // base line height
 
-function addWrappedText(
-  doc: jsPDF,
-  text: string,
-  x: number,
-  y: number,
-  maxWidth: number,
-  lineH = LINE_HEIGHT,
-): number {
-  const lines = doc.splitTextToSize(text, maxWidth) as string[];
+function wrap(doc: jsPDF, text: string, x: number, y: number, maxW: number, lh = LH): number {
+  const lines = doc.splitTextToSize(text, maxW) as string[];
   doc.text(lines, x, y);
-  return y + lines.length * lineH;
+  return y + lines.length * lh;
 }
 
-function ensureSpace(doc: jsPDF, y: number, needed = 20): number {
-  if (y + needed > 280) {
+function newPageIfNeeded(doc: jsPDF, y: number, needed = 18): number {
+  if (y + needed > 282) {
     doc.addPage();
-    return MARGIN + 5;
+    return M + 4;
   }
   return y;
 }
 
-function sessionToPDF(doc: jsPDF, session: Session, startY = MARGIN): number {
+// Draw a thin horizontal rule
+function rule(doc: jsPDF, y: number, alpha = 0.15): void {
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.2);
+  doc.line(M, y, PW - M, y);
+  doc.setDrawColor(0, 0, 0);
+  void alpha; // alpha not used (jsPDF doesn't support line alpha easily)
+}
+
+function sessionToPDF(doc: jsPDF, session: Session, startY = M): number {
   let y = startY;
-  const textWidth = PAGE_WIDTH - MARGIN * 2;
 
-  // Title
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  y = addWrappedText(doc, `${session.day}: ${session.focus}`, MARGIN, y, textWidth);
-  y += 2;
-
-  // Meta
-  doc.setFontSize(10);
+  // ── Session header ──────────────────────────────────────────────────────────
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(130, 130, 130);
   doc.text(
-    `Energy: ${session.energySystem}  |  Volume: ${session.totalVolumeM}m`,
-    MARGIN,
-    y,
+    `${session.day.toUpperCase()}  ·  ${session.energySystem.toUpperCase()}  ·  ${new Date(session.createdAt).toLocaleDateString()}`,
+    M, y,
   );
-  y += LINE_HEIGHT + 2;
+  y += 6;
 
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(20, 20, 20);
+  y = wrap(doc, session.focus, M, y, CW * 0.7, 7);
+
+  // Volume — large mono number on the right
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(40, 40, 40);
+  const volStr = `${session.totalVolumeM.toLocaleString()}m`;
+  const volW = doc.getTextWidth(volStr);
+  doc.text(volStr, PW - M - volW, startY + 13);
+
+  y += 2;
+  rule(doc, y);
+  y += 5;
+
+  // ── Column headers ──────────────────────────────────────────────────────────
+  const COL = { name: M, desc: M + 28, effort: M + 118, rest: M + 142, vol: M + 166 };
+
+  doc.setFontSize(6.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(160, 160, 160);
+  doc.text('SET', COL.name, y);
+  doc.text('DESCRIPTION', COL.desc, y);
+  doc.text('EFFORT', COL.effort, y);
+  doc.text('REST', COL.rest, y);
+  doc.text('VOL', COL.vol, y);
+  y += 4;
+  rule(doc, y);
+  y += 5;
+
+  // ── Set rows ────────────────────────────────────────────────────────────────
   for (const set of session.sets) {
-    y = ensureSpace(doc, y);
+    y = newPageIfNeeded(doc, y, 14);
 
     // Set name
-    doc.setFontSize(12);
+    doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
-    doc.text(set.name, MARGIN, y);
-    y += LINE_HEIGHT;
+    doc.setTextColor(50, 50, 50);
+    const nameLines = doc.splitTextToSize(set.name.toUpperCase(), 26) as string[];
+    doc.text(nameLines, COL.name, y);
 
     // Description
-    doc.setFontSize(10);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    y = addWrappedText(doc, set.description, MARGIN, y, textWidth);
-    y += 2;
+    doc.setTextColor(30, 30, 30);
+    const descLines = doc.splitTextToSize(set.description, 86) as string[];
+    doc.text(descLines, COL.desc, y);
 
-    // Meta line
-    const parts: string[] = [];
-    if (set.effort) parts.push(`Effort: ${set.effort}`);
-    if (set.rest) parts.push(`Rest: ${set.rest}`);
-    if (set.equipment) parts.push(`Equipment: ${set.equipment}`);
-    if (parts.length) {
-      doc.setTextColor(80, 80, 80);
-      y = addWrappedText(doc, parts.join('  |  '), MARGIN, y, textWidth, 5);
-      doc.setTextColor(0, 0, 0);
-      y += 2;
+    // Effort
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(70, 70, 70);
+    if (set.effort) doc.text(set.effort, COL.effort, y);
+
+    // Rest
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    if (set.rest) {
+      const restLines = doc.splitTextToSize(set.rest, 22) as string[];
+      doc.text(restLines, COL.rest, y);
+    }
+
+    // Volume
+    doc.setFont('helvetica', 'normal');
+    if (set.volumeM > 0) doc.text(`${set.volumeM}m`, COL.vol, y);
+
+    const rowH = Math.max(nameLines.length, descLines.length) * LH;
+    y += rowH;
+
+    // Equipment
+    if (set.equipment) {
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(150, 150, 150);
+      doc.text(`⚙ ${set.equipment}`, COL.desc, y);
+      y += 4;
     }
 
     // Technique cue
     if (set.techniqueCue) {
-      y = ensureSpace(doc, y);
-      doc.setTextColor(30, 100, 180);
-      y = addWrappedText(doc, `Technique: ${set.techniqueCue}`, MARGIN + 4, y, textWidth - 4, 5);
-      doc.setTextColor(0, 0, 0);
-      y += 2;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'italic');
+      doc.setTextColor(120, 120, 120);
+      y = wrap(doc, `› ${set.techniqueCue}`, COL.desc, y, CW - 30, 4.5);
+      y += 1;
     }
 
+    y += 2;
+    rule(doc, y, 0.08);
     y += 4;
   }
 
@@ -161,28 +214,35 @@ function sessionToPDF(doc: jsPDF, session: Session, startY = MARGIN): number {
 }
 
 export function exportSessionPDF(session: Session): void {
-  const doc = new jsPDF();
-  sessionToPDF(doc, session, MARGIN + 5);
-  doc.save(`swim-session-${session.day.toLowerCase()}.pdf`);
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  sessionToPDF(doc, session, M + 8);
+  const filename = `swim-${session.day.toLowerCase()}-${session.focus.replace(/\//g, '-').replace(/\s+/g, '-').toLowerCase()}.pdf`;
+  doc.save(filename);
 }
 
 export function exportWeeklyPDF(plan: WeeklyPlan): void {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  // Cover page title
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`${plan.phase} Training Week`, MARGIN, MARGIN + 5);
-  doc.setFontSize(10);
+  // Cover header
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Generated: ${new Date(plan.createdAt).toLocaleDateString()}`, MARGIN, MARGIN + 12);
+  doc.setTextColor(150, 150, 150);
+  doc.text(
+    `SWIMCOACH AI  ·  ${plan.phase} TRAINING WEEK  ·  ${new Date(plan.createdAt).toLocaleDateString()}`,
+    M, M + 4,
+  );
 
-  let y = MARGIN + 22;
+  const totalVol = plan.sessions.reduce((s, d) => s + d.totalVolumeM, 0);
+  doc.setFontSize(7);
+  doc.setTextColor(180, 180, 180);
+  doc.text(`Total: ${totalVol.toLocaleString()}m`, M, M + 9);
+
+  let y = M + 18;
 
   for (let i = 0; i < plan.sessions.length; i++) {
     if (i > 0) {
       doc.addPage();
-      y = MARGIN + 5;
+      y = M + 8;
     }
     y = sessionToPDF(doc, plan.sessions[i]!, y);
   }

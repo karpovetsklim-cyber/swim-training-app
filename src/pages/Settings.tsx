@@ -16,33 +16,29 @@ const EQUIPMENT_OPTIONS = [
 
 const MODELS = [
   { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (recommended)' },
-  { value: 'claude-opus-4-6', label: 'Claude Opus 4.6 (most capable, slower)' },
-  { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 (fastest, cheapest)' },
+  { value: 'claude-opus-4-6',   label: 'Claude Opus 4.6 (most capable, slower)' },
+  { value: 'claude-haiku-4-5',  label: 'Claude Haiku 4.5 (fastest, cheapest)' },
 ];
+
+const INPUT_CLS =
+  'w-full bg-slate-900 border border-slate-700/40 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-500/60 focus:ring-1 focus:ring-slate-500/10';
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">{children}</h2>
+    <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mb-4">{children}</p>
   );
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-300 mb-1.5">{label}</label>
+      <label className="block font-mono text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">
+        {label}
+      </label>
       {children}
     </div>
   );
 }
-
-const INPUT_CLS =
-  'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-sky-500';
 
 export function Settings() {
   const [profile, setProfile] = useState<AthleteProfile>(getProfile);
@@ -77,10 +73,7 @@ export function Settings() {
     const key = newEvent.key.trim().toLowerCase().replace(/\s+/g, '_');
     setProfile({
       ...profile,
-      events: {
-        ...profile.events,
-        [key]: { bestTimeS: newEvent.bestTimeS, priority: newEvent.priority },
-      },
+      events: { ...profile.events, [key]: { bestTimeS: newEvent.bestTimeS, priority: newEvent.priority } },
     });
     setNewEvent({ key: '', bestTimeS: 0, priority: 'A' });
   }
@@ -91,15 +84,24 @@ export function Settings() {
     setProfile({ ...profile, events });
   }
 
+  const SAVE_BTN = (saved: boolean) =>
+    `flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+      saved
+        ? 'border border-emerald-800/50 text-emerald-400/70'
+        : 'bg-slate-100 hover:bg-white text-slate-900 hover:shadow-[0_0_20px_rgba(255,255,255,0.06)]'
+    }`;
+
   return (
     <div className="max-w-2xl space-y-8">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Settings</h1>
-        <p className="text-gray-400 text-sm">Manage your profile and API configuration.</p>
+        <p className="font-mono text-[10px] text-slate-600 uppercase tracking-[0.2em] mb-1">Configuration</p>
+        <h1 className="text-3xl font-extralight text-slate-100 tracking-wide">Settings</h1>
+        <p className="text-sm text-slate-500 mt-1">Manage your profile and API configuration.</p>
       </div>
 
       {/* API Settings */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-4">
+      <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm p-5 space-y-4">
         <SectionTitle>API Configuration</SectionTitle>
 
         <Field label="Anthropic API Key">
@@ -113,13 +115,13 @@ export function Settings() {
             />
             <button
               onClick={() => setShowKey(!showKey)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400"
             >
-              {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
+              {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Stored locally in your browser. Never sent anywhere except Anthropic.
+          <p className="font-mono text-[10px] text-slate-700 uppercase tracking-wider mt-1.5">
+            Stored locally · never sent anywhere except Anthropic
           </p>
         </Field>
 
@@ -130,27 +132,18 @@ export function Settings() {
             className={INPUT_CLS}
           >
             {MODELS.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
+              <option key={m.value} value={m.value}>{m.label}</option>
             ))}
           </select>
         </Field>
 
-        <button
-          onClick={handleSaveSettings}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            settingsSaved
-              ? 'bg-green-700 text-white'
-              : 'bg-sky-600 hover:bg-sky-500 text-white'
-          }`}
-        >
-          {settingsSaved ? <><Check size={14} /> Saved!</> : 'Save API Settings'}
+        <button onClick={handleSaveSettings} className={SAVE_BTN(settingsSaved)}>
+          {settingsSaved ? <><Check size={13} /> Saved</> : 'Save Settings'}
         </button>
       </div>
 
       {/* Athlete Profile */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-4">
+      <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm p-5 space-y-4">
         <SectionTitle>Athlete Profile</SectionTitle>
 
         <div className="grid grid-cols-2 gap-4">
@@ -253,10 +246,10 @@ export function Settings() {
                 <button
                   key={eq}
                   onClick={() => toggleEquipment(eq)}
-                  className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
+                  className={`font-mono text-[10px] px-2.5 py-1.5 rounded border uppercase tracking-wider transition-all duration-200 ${
                     active
-                      ? 'bg-sky-900/50 border-sky-600/50 text-sky-300'
-                      : 'bg-gray-800 border-gray-700 text-gray-500 hover:border-gray-600 hover:text-gray-400'
+                      ? 'border-slate-500/60 text-slate-200 bg-slate-800/60'
+                      : 'border-slate-800/50 text-slate-600 hover:border-slate-700/60 hover:text-slate-400'
                   }`}
                 >
                   {eq.replace(/_/g, ' ')}
@@ -270,8 +263,8 @@ export function Settings() {
         <Field label="Race Events">
           <div className="space-y-2">
             {Object.entries(profile.events).map(([key, data]) => (
-              <div key={key} className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2">
-                <span className="flex-1 text-sm text-white">{key.replace(/_/g, ' ')}</span>
+              <div key={key} className="flex items-center gap-2 border border-slate-800/50 rounded-lg px-3 py-2 bg-slate-900/40">
+                <span className="flex-1 text-sm text-slate-300">{key.replace(/_/g, ' ')}</span>
                 <input
                   type="number"
                   value={data.bestTimeS}
@@ -279,27 +272,21 @@ export function Settings() {
                   onChange={(e) =>
                     setProfile({
                       ...profile,
-                      events: {
-                        ...profile.events,
-                        [key]: { ...data, bestTimeS: +e.target.value },
-                      },
+                      events: { ...profile.events, [key]: { ...data, bestTimeS: +e.target.value } },
                     })
                   }
-                  className="w-20 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-100 focus:outline-none focus:border-sky-500"
+                  className="w-20 bg-slate-800 border border-slate-700/40 rounded px-2 py-1 font-mono text-xs text-slate-100 focus:outline-none focus:border-slate-500/60"
                 />
-                <span className="text-xs text-gray-500">s</span>
+                <span className="font-mono text-[10px] text-slate-600">s</span>
                 <select
                   value={data.priority}
                   onChange={(e) =>
                     setProfile({
                       ...profile,
-                      events: {
-                        ...profile.events,
-                        [key]: { ...data, priority: e.target.value as 'A' | 'B' | 'C' },
-                      },
+                      events: { ...profile.events, [key]: { ...data, priority: e.target.value as 'A' | 'B' | 'C' } },
                     })
                   }
-                  className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-gray-100 focus:outline-none focus:border-sky-500"
+                  className="bg-slate-800 border border-slate-700/40 rounded px-2 py-1 font-mono text-xs text-slate-100 focus:outline-none"
                 >
                   <option value="A">A</option>
                   <option value="B">B</option>
@@ -307,21 +294,21 @@ export function Settings() {
                 </select>
                 <button
                   onClick={() => removeEvent(key)}
-                  className="text-gray-600 hover:text-red-400 transition-colors"
+                  className="text-slate-700 hover:text-red-500/70 transition-colors"
                 >
-                  <Trash2 size={13} />
+                  <Trash2 size={12} />
                 </button>
               </div>
             ))}
 
             {/* Add new event */}
-            <div className="flex items-center gap-2 bg-gray-800/50 border border-dashed border-gray-700 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2 border border-dashed border-slate-800/60 rounded-lg px-3 py-2">
               <input
                 type="text"
                 value={newEvent.key}
                 onChange={(e) => setNewEvent({ ...newEvent, key: e.target.value })}
                 placeholder="e.g. 200_back"
-                className="flex-1 bg-transparent text-xs text-gray-300 placeholder-gray-600 focus:outline-none"
+                className="flex-1 bg-transparent text-xs text-slate-400 placeholder-slate-700 focus:outline-none"
               />
               <input
                 type="number"
@@ -329,13 +316,13 @@ export function Settings() {
                 step="0.1"
                 onChange={(e) => setNewEvent({ ...newEvent, bestTimeS: +e.target.value })}
                 placeholder="time"
-                className="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-0.5 text-xs text-gray-100 focus:outline-none focus:border-sky-500"
+                className="w-16 bg-slate-800 border border-slate-700/40 rounded px-2 py-1 font-mono text-xs text-slate-100 focus:outline-none"
               />
-              <span className="text-xs text-gray-500">s</span>
+              <span className="font-mono text-[10px] text-slate-600">s</span>
               <select
                 value={newEvent.priority}
                 onChange={(e) => setNewEvent({ ...newEvent, priority: e.target.value as 'A' | 'B' | 'C' })}
-                className="bg-gray-700 border border-gray-600 rounded px-1.5 py-0.5 text-xs text-gray-100 focus:outline-none"
+                className="bg-slate-800 border border-slate-700/40 rounded px-2 py-1 font-mono text-xs text-slate-100 focus:outline-none"
               >
                 <option value="A">A</option>
                 <option value="B">B</option>
@@ -343,23 +330,16 @@ export function Settings() {
               </select>
               <button
                 onClick={addEvent}
-                className="text-sky-500 hover:text-sky-400 transition-colors"
+                className="text-slate-500 hover:text-slate-200 transition-colors"
               >
-                <Plus size={15} />
+                <Plus size={14} />
               </button>
             </div>
           </div>
         </Field>
 
-        <button
-          onClick={handleSaveProfile}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            profileSaved
-              ? 'bg-green-700 text-white'
-              : 'bg-sky-600 hover:bg-sky-500 text-white'
-          }`}
-        >
-          {profileSaved ? <><Check size={14} /> Saved!</> : 'Save Profile'}
+        <button onClick={handleSaveProfile} className={SAVE_BTN(profileSaved)}>
+          {profileSaved ? <><Check size={13} /> Saved</> : 'Save Profile'}
         </button>
       </div>
     </div>

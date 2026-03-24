@@ -5,26 +5,23 @@ import type { SavedWorkout } from '../types';
 
 function RecentCard({ workout }: { workout: SavedWorkout }) {
   const isSession = workout.type === 'session';
-  const to = `/history`;
 
   return (
     <Link
-      to={to}
-      className="flex items-center justify-between gap-3 bg-gray-800/50 hover:bg-gray-800 border border-gray-700/50 rounded-lg px-4 py-3 transition-colors"
+      to="/history"
+      className="group flex items-center justify-between gap-3 border-b border-slate-800/40 last:border-b-0 py-3 px-1 hover:bg-slate-900/30 transition-all duration-200 rounded"
     >
       <div className="flex items-center gap-3 min-w-0">
-        <span
-          className={`shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-xs ${
-            isSession
-              ? 'bg-sky-900/60 text-sky-400'
-              : 'bg-violet-900/60 text-violet-400'
-          }`}
-        >
-          {isSession ? <Zap size={13} /> : <Calendar size={13} />}
+        <span className={`shrink-0 w-6 h-6 flex items-center justify-center rounded font-mono text-[10px] border ${
+          isSession
+            ? 'border-slate-700/40 text-slate-400'
+            : 'border-slate-700/40 text-slate-500'
+        }`}>
+          {isSession ? <Zap size={11} /> : <Calendar size={11} />}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-white truncate">{workout.label}</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-sm text-slate-200 truncate">{workout.label}</p>
+          <p className="font-mono text-[10px] text-slate-600 uppercase tracking-wider">
             {new Date(workout.savedAt).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
@@ -33,7 +30,7 @@ function RecentCard({ workout }: { workout: SavedWorkout }) {
           </p>
         </div>
       </div>
-      <span className="shrink-0 text-xs text-gray-600">
+      <span className="shrink-0 font-mono text-[10px] text-slate-700 uppercase tracking-wider">
         {isSession ? 'session' : 'week'}
       </span>
     </Link>
@@ -51,13 +48,13 @@ export function Dashboard() {
       {/* Left: Quick actions + recent */}
       <div className="lg:col-span-2 space-y-6">
         {!hasKey && (
-          <div className="flex items-start gap-3 bg-amber-950/40 border border-amber-700/40 rounded-xl px-4 py-3">
-            <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 border border-amber-900/40 bg-amber-950/20 rounded-xl px-4 py-3">
+            <AlertTriangle size={16} className="text-amber-500/70 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-amber-300">API key required</p>
-              <p className="text-xs text-amber-400/70 mt-0.5">
+              <p className="text-sm text-amber-400/80">API key required</p>
+              <p className="text-xs text-slate-600 mt-0.5">
                 Add your Anthropic API key in{' '}
-                <Link to="/settings" className="underline">
+                <Link to="/settings" className="text-slate-400 hover:text-slate-200 underline underline-offset-2">
                   Settings
                 </Link>{' '}
                 to generate workouts.
@@ -66,36 +63,50 @@ export function Dashboard() {
           </div>
         )}
 
+        {/* Greeting */}
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Good swim, {profile.name}.</h1>
-          <p className="text-gray-400 text-sm">What are we working on today?</p>
+          <p className="font-mono text-[10px] text-slate-600 uppercase tracking-[0.2em] mb-1">
+            Welcome back
+          </p>
+          <h1 className="text-3xl font-extralight text-slate-100 tracking-wide">
+            Good swim, {profile.name}.
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">What are we working on today?</p>
         </div>
 
         {/* Quick actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Link
             to="/session"
-            className="group flex flex-col gap-3 bg-gradient-to-br from-sky-900/40 to-sky-800/20 hover:from-sky-900/60 hover:to-sky-800/40 border border-sky-700/30 hover:border-sky-600/50 rounded-xl p-5 transition-all"
+            className="group relative overflow-hidden border border-slate-800/60 hover:border-slate-700/80 rounded-xl p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] bg-slate-900/30"
           >
-            <div className="w-10 h-10 rounded-lg bg-sky-600/30 flex items-center justify-center group-hover:bg-sky-600/50 transition-colors">
-              <Zap className="text-sky-300" size={20} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-white">Generate Session</h3>
-              <p className="text-sm text-gray-400 mt-0.5">One complete workout, built by AI</p>
+            <div className="flex items-start gap-4">
+              <div className="w-8 h-8 rounded border border-slate-700/40 flex items-center justify-center shrink-0 group-hover:border-slate-600/60 transition-colors">
+                <Zap className="text-slate-400 group-hover:text-slate-300" size={16} />
+              </div>
+              <div>
+                <h3 className="text-base font-light text-slate-100 tracking-wide">Generate Session</h3>
+                <p className="font-mono text-[10px] text-slate-600 uppercase tracking-wider mt-1">
+                  One complete workout
+                </p>
+              </div>
             </div>
           </Link>
 
           <Link
             to="/weekly"
-            className="group flex flex-col gap-3 bg-gradient-to-br from-violet-900/40 to-violet-800/20 hover:from-violet-900/60 hover:to-violet-800/40 border border-violet-700/30 hover:border-violet-600/50 rounded-xl p-5 transition-all"
+            className="group relative overflow-hidden border border-slate-800/60 hover:border-slate-700/80 rounded-xl p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] bg-slate-900/30"
           >
-            <div className="w-10 h-10 rounded-lg bg-violet-600/30 flex items-center justify-center group-hover:bg-violet-600/50 transition-colors">
-              <Calendar className="text-violet-300" size={20} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-white">Generate Weekly Plan</h3>
-              <p className="text-sm text-gray-400 mt-0.5">Full Mon–Sat training week</p>
+            <div className="flex items-start gap-4">
+              <div className="w-8 h-8 rounded border border-slate-700/40 flex items-center justify-center shrink-0 group-hover:border-slate-600/60 transition-colors">
+                <Calendar className="text-slate-400 group-hover:text-slate-300" size={16} />
+              </div>
+              <div>
+                <h3 className="text-base font-light text-slate-100 tracking-wide">Generate Weekly Plan</h3>
+                <p className="font-mono text-[10px] text-slate-600 uppercase tracking-wider mt-1">
+                  Full Mon–Sat week
+                </p>
+              </div>
             </div>
           </Link>
         </div>
@@ -103,22 +114,24 @@ export function Dashboard() {
         {/* Recent workouts */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-white">Recent Workouts</h2>
+            <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest">Recent</p>
             {workouts.length > 0 && (
-              <Link to="/history" className="text-xs text-sky-400 hover:text-sky-300">
+              <Link to="/history" className="font-mono text-[10px] text-slate-600 hover:text-slate-300 uppercase tracking-wider transition-colors">
                 View all
               </Link>
             )}
           </div>
 
           {workouts.length === 0 ? (
-            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-8 text-center">
-              <Clock className="mx-auto text-gray-600 mb-2" size={28} />
-              <p className="text-gray-500 text-sm">No workouts saved yet</p>
-              <p className="text-gray-600 text-xs mt-1">Generate your first session to get started</p>
+            <div className="border border-slate-800/40 rounded-xl p-10 text-center">
+              <Clock className="mx-auto text-slate-700 mb-3" size={24} />
+              <p className="text-sm text-slate-600">No workouts saved yet</p>
+              <p className="font-mono text-[10px] text-slate-700 uppercase tracking-wider mt-1">
+                Generate your first session
+              </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="border border-slate-800/40 rounded-xl bg-slate-900/30 px-4 py-1">
               {workouts.map((w) => (
                 <RecentCard key={w.id} workout={w} />
               ))}
@@ -128,59 +141,54 @@ export function Dashboard() {
       </div>
 
       {/* Right: Athlete profile card */}
-      <div className="space-y-4">
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <div>
+        <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-white">Athlete</h2>
-            <Link to="/settings" className="text-xs text-sky-400 hover:text-sky-300">
+            <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest">Athlete</p>
+            <Link
+              to="/settings"
+              className="font-mono text-[10px] text-slate-600 hover:text-slate-300 uppercase tracking-wider transition-colors"
+            >
               Edit
             </Link>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <p className="text-lg font-bold text-white">{profile.name}</p>
-              <p className="text-sm text-gray-400">
+              <p className="text-xl font-light text-slate-100">{profile.name}</p>
+              <p className="font-mono text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">
                 {profile.age} yo · {profile.level.replace(/_/g, ' ')}
               </p>
             </div>
 
-            <div className="border-t border-gray-800 pt-3 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Pool</span>
-                <span className="text-gray-300">{profile.poolLengthM}m</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Sessions/week</span>
-                <span className="text-gray-300">{profile.sessionsPerWeek}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Volume range</span>
-                <span className="text-gray-300">
-                  {profile.sessionVolumeRange.min}–{profile.sessionVolumeRange.max}m
-                </span>
-              </div>
+            <div className="border-t border-slate-800/50 pt-3 space-y-2.5">
+              {[
+                ['Pool', `${profile.poolLengthM}m`],
+                ['Sessions/week', String(profile.sessionsPerWeek)],
+                ['Volume range', `${profile.sessionVolumeRange.min}–${profile.sessionVolumeRange.max}m`],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between items-center">
+                  <span className="font-mono text-[10px] text-slate-600 uppercase tracking-wider">{label}</span>
+                  <span className="font-mono text-xs text-slate-300">{value}</span>
+                </div>
+              ))}
             </div>
 
-            <div className="border-t border-gray-800 pt-3">
-              <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">Events</p>
-              <div className="space-y-1.5">
+            <div className="border-t border-slate-800/50 pt-3">
+              <p className="font-mono text-[10px] text-slate-600 uppercase tracking-widest mb-2">Events</p>
+              <div className="space-y-2">
                 {Object.entries(profile.events).map(([event, data]) => (
                   <div key={event} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">
-                      {event.replace(/_/g, ' ')}
-                    </span>
+                    <span className="text-xs text-slate-400">{event.replace(/_/g, ' ')}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono text-white">{data.bestTimeS}s</span>
-                      <span
-                        className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                          data.priority === 'A'
-                            ? 'bg-sky-900/50 text-sky-400'
-                            : data.priority === 'B'
-                            ? 'bg-gray-800 text-gray-400'
-                            : 'bg-gray-900 text-gray-600'
-                        }`}
-                      >
+                      <span className="font-mono text-xs text-slate-200">{data.bestTimeS}s</span>
+                      <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded border ${
+                        data.priority === 'A'
+                          ? 'border-slate-500/50 text-slate-300'
+                          : data.priority === 'B'
+                          ? 'border-slate-700/50 text-slate-500'
+                          : 'border-slate-800/50 text-slate-700'
+                      }`}>
                         {data.priority}
                       </span>
                     </div>
@@ -189,13 +197,13 @@ export function Dashboard() {
               </div>
             </div>
 
-            <div className="border-t border-gray-800 pt-3">
-              <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">Equipment</p>
+            <div className="border-t border-slate-800/50 pt-3">
+              <p className="font-mono text-[10px] text-slate-600 uppercase tracking-widest mb-2">Equipment</p>
               <div className="flex flex-wrap gap-1.5">
                 {profile.equipment.map((eq) => (
                   <span
                     key={eq}
-                    className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full"
+                    className="font-mono text-[10px] border border-slate-800/60 text-slate-600 px-2 py-0.5 rounded uppercase tracking-wider"
                   >
                     {eq.replace(/_/g, ' ')}
                   </span>

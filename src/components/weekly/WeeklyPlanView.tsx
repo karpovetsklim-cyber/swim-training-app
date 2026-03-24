@@ -23,12 +23,14 @@ import {
   RefreshCw,
   GripVertical,
   ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import { SetCard } from '../session/SetCard';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { exportWeeklyMarkdown, exportWeeklyPDF } from '../../lib/export';
 import type { WeeklyPlan, Session, SwimSet } from '../../types';
+
+const GHOST_BTN =
+  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700/50 text-slate-400 hover:border-slate-600/60 hover:text-slate-200 text-xs font-mono tracking-wide uppercase transition-all duration-200';
 
 // ── Sortable day tab ──────────────────────────────────────────────────────────
 
@@ -43,31 +45,31 @@ function DayTab({ session, isActive, onClick }: DayTabProps) {
     id: session.id,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
     <div ref={setNodeRef} style={style} className="flex items-center">
       <button
         onClick={onClick}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+        className={`relative flex items-center gap-1.5 px-3 py-2 text-xs font-mono tracking-wider uppercase whitespace-nowrap transition-all duration-200 ${
           isActive
-            ? 'bg-sky-600 text-white'
-            : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+            ? 'text-slate-100'
+            : 'text-slate-500 hover:text-slate-300'
         }`}
       >
         <GripVertical
-          size={13}
-          className="cursor-grab text-gray-400"
+          size={11}
+          className="cursor-grab text-slate-700 hover:text-slate-500"
           {...attributes}
           {...listeners}
         />
-        <span className="font-medium">{session.day}</span>
-        <span className={`text-xs ${isActive ? 'text-sky-200' : 'text-gray-500'}`}>
+        {session.day.slice(0, 3)}
+        <span className={`font-mono text-[10px] ${isActive ? 'text-slate-500' : 'text-slate-700'}`}>
           {session.totalVolumeM}m
         </span>
+        {isActive && (
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-px bg-slate-400/60 rounded-full" />
+        )}
       </button>
     </div>
   );
@@ -84,27 +86,33 @@ function DayPanel({ session, onSetUpdate }: DayPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800">
+    <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm">
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="w-full flex items-center justify-between px-5 py-4"
       >
         <div className="flex items-center gap-3">
-          <h3 className="font-semibold text-white">
-            {session.day}: {session.focus}
+          <p className="font-mono text-[10px] text-slate-500 uppercase tracking-[0.2em]">
+            {session.day}
+          </p>
+          <h3 className="font-light text-slate-200 text-base tracking-wide">
+            {session.focus}
           </h3>
-          <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">
+          <span className="font-mono text-[10px] text-slate-600 uppercase tracking-wider hidden sm:inline">
             {session.energySystem}
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sky-400 font-semibold">{session.totalVolumeM}m</span>
-          {collapsed ? <ChevronDown size={16} className="text-gray-500" /> : <ChevronUp size={16} className="text-gray-500" />}
+          <span className="font-mono text-sm text-slate-400">{session.totalVolumeM}m</span>
+          <ChevronDown
+            size={14}
+            className={`text-slate-600 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`}
+          />
         </div>
       </button>
 
       {!collapsed && (
-        <div className="px-5 pb-5 space-y-2">
+        <div className="px-4 pb-4">
           {session.sets.map((set, i) => (
             <SetCard
               key={`${session.id}-${i}`}
@@ -129,19 +137,12 @@ interface WeeklyPlanViewProps {
   saved?: boolean;
 }
 
-export function WeeklyPlanView({
-  plan,
-  onSave,
-  onRefine,
-  isRefining,
-  saved,
-}: WeeklyPlanViewProps) {
+export function WeeklyPlanView({ plan, onSave, onRefine, isRefining, saved }: WeeklyPlanViewProps) {
   const [currentPlan, setCurrentPlan] = useState<WeeklyPlan>(plan);
   const [activeDay, setActiveDay] = useState<string | null>(plan.sessions[0]?.day ?? null);
   const [refineText, setRefineText] = useState('');
   const [showRefine, setShowRefine] = useState(false);
 
-  // Sync on new plan from parent
   if (plan !== currentPlan && !isRefining) {
     setCurrentPlan(plan);
     setActiveDay(plan.sessions[0]?.day ?? null);
@@ -155,11 +156,9 @@ export function WeeklyPlanView({
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-
     const oldIndex = currentPlan.sessions.findIndex((s) => s.id === active.id);
     const newIndex = currentPlan.sessions.findIndex((s) => s.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
-
     const sessions = [...currentPlan.sessions];
     const [moved] = sessions.splice(oldIndex, 1);
     if (moved) sessions.splice(newIndex, 0, moved);
@@ -184,21 +183,27 @@ export function WeeklyPlanView({
     setShowRefine(false);
   }
 
+  const totalVol = currentPlan.sessions.reduce((s, d) => s + d.totalVolumeM, 0);
   const activeSession = currentPlan.sessions.find((s) => s.day === activeDay);
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm p-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h2 className="text-xl font-bold text-white">{currentPlan.phase} Training Week</h2>
-            <p className="text-gray-400 text-sm mt-1">
-              {currentPlan.sessions.length} sessions · Total:{' '}
-              {currentPlan.sessions.reduce((s, d) => s + d.totalVolumeM, 0).toLocaleString()}m
+            <p className="font-mono text-[10px] text-slate-500 uppercase tracking-[0.2em] mb-1">
+              {currentPlan.sessions.length} sessions
+            </p>
+            <h2 className="text-2xl font-extralight text-slate-100 tracking-wide">
+              {currentPlan.phase} Training Week
+            </h2>
+            <p className="font-mono text-3xl font-light text-slate-300 mt-1">
+              {totalVol.toLocaleString()}
+              <span className="text-base text-slate-500 ml-1">m total</span>
             </p>
             {currentPlan.context && (
-              <p className="text-xs text-gray-500 mt-1">{currentPlan.context}</p>
+              <p className="text-xs text-slate-600 mt-2 italic">{currentPlan.context}</p>
             )}
           </div>
 
@@ -206,41 +211,35 @@ export function WeeklyPlanView({
             <button
               onClick={() => setShowRefine(!showRefine)}
               disabled={!onRefine || isRefining}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-800/40 hover:bg-violet-700/50 text-violet-300 text-sm border border-violet-700/40 transition-colors disabled:opacity-40"
+              className={`${GHOST_BTN} disabled:opacity-30`}
             >
-              <Sparkles size={14} /> AI Refine
+              <Sparkles size={12} /> Refine
             </button>
-            <button
-              onClick={() => exportWeeklyMarkdown(currentPlan)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm border border-gray-700 transition-colors"
-            >
-              <FileText size={14} /> .md
+            <button onClick={() => exportWeeklyMarkdown(currentPlan)} className={GHOST_BTN}>
+              <FileText size={12} /> .md
             </button>
-            <button
-              onClick={() => exportWeeklyPDF(currentPlan)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm border border-gray-700 transition-colors"
-            >
-              <FileDown size={14} /> PDF
+            <button onClick={() => exportWeeklyPDF(currentPlan)} className={GHOST_BTN}>
+              <FileDown size={12} /> PDF
             </button>
             {onSave && (
               <button
                 onClick={() => onSave(currentPlan)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono tracking-wide uppercase transition-all duration-200 ${
                   saved
-                    ? 'bg-green-900/40 text-green-300 border-green-700/40'
-                    : 'bg-sky-700/40 hover:bg-sky-600/50 text-sky-300 border-sky-600/40'
+                    ? 'border border-emerald-800/50 text-emerald-400/70'
+                    : 'bg-slate-100 hover:bg-white text-slate-900 font-medium'
                 }`}
               >
-                <Save size={14} /> {saved ? 'Saved!' : 'Save Week'}
+                <Save size={12} /> {saved ? 'Saved' : 'Save Week'}
               </button>
             )}
           </div>
         </div>
 
         {showRefine && (
-          <div className="mt-4 pt-4 border-t border-gray-800">
-            <p className="text-xs text-gray-400 mb-2">
-              Describe what to change across the week. The AI will regenerate the full plan.
+          <div className="mt-4 pt-4 border-t border-slate-800/50">
+            <p className="font-mono text-[10px] text-slate-600 uppercase tracking-widest mb-2">
+              Describe the change
             </p>
             <div className="flex gap-2">
               <input
@@ -249,17 +248,17 @@ export function WeeklyPlanView({
                 onChange={(e) => setRefineText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && void handleRefine()}
                 placeholder='e.g. "make Wednesday easier" or "add more IM on Thursday"'
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-violet-500"
+                className="flex-1 bg-slate-900 border border-slate-700/40 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-slate-500/50"
               />
               <button
                 onClick={() => void handleRefine()}
                 disabled={!refineText.trim() || isRefining}
-                className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white rounded-lg text-sm transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-white disabled:opacity-30 text-slate-900 rounded-lg text-xs font-medium transition-all"
               >
                 {isRefining ? (
-                  <RefreshCw size={14} className="animate-spin" />
+                  <RefreshCw size={13} className="animate-spin" />
                 ) : (
-                  <Sparkles size={14} />
+                  <Sparkles size={13} />
                 )}
                 Refine
               </button>
@@ -269,29 +268,31 @@ export function WeeklyPlanView({
       </div>
 
       {isRefining ? (
-        <div className="bg-gray-900/80 rounded-xl border border-gray-800 p-6">
-          <LoadingSpinner label="AI is refining your weekly plan..." />
+        <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 p-6">
+          <LoadingSpinner label="Refining weekly plan..." />
         </div>
       ) : (
         <>
           {/* Day tabs with drag-and-drop */}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext
-              items={currentPlan.sessions.map((s) => s.id)}
-              strategy={horizontalListSortingStrategy}
-            >
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {currentPlan.sessions.map((session) => (
-                  <DayTab
-                    key={session.id}
-                    session={session}
-                    isActive={activeDay === session.day}
-                    onClick={() => setActiveDay(session.day)}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+          <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm px-2">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={currentPlan.sessions.map((s) => s.id)}
+                strategy={horizontalListSortingStrategy}
+              >
+                <div className="flex gap-0 overflow-x-auto">
+                  {currentPlan.sessions.map((session) => (
+                    <DayTab
+                      key={session.id}
+                      session={session}
+                      isActive={activeDay === session.day}
+                      onClick={() => setActiveDay(session.day)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </div>
 
           {/* Active day detail */}
           {activeSession && (
@@ -303,10 +304,10 @@ export function WeeklyPlanView({
             />
           )}
 
-          {/* All days overview (collapsed by default) */}
+          {/* All days overview */}
           <details className="group">
-            <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-200 transition-colors py-2 list-none flex items-center gap-2">
-              <ChevronDown size={14} className="group-open:rotate-180 transition-transform" />
+            <summary className="cursor-pointer font-mono text-[10px] text-slate-600 hover:text-slate-400 uppercase tracking-widest transition-colors py-2 list-none flex items-center gap-2">
+              <ChevronDown size={12} className="group-open:rotate-180 transition-transform" />
               Show all days
             </summary>
             <div className="mt-3 space-y-3">
