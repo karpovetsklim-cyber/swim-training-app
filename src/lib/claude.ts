@@ -31,22 +31,12 @@ Equipment available: ${profile.equipment.join(', ')}
 Session volume range: ${profile.sessionVolumeRange.min}–${profile.sessionVolumeRange.max}m`;
 }
 
-async function callClaude(
-  apiKey: string,
-  model: string,
-  messages: ClaudeMessage[],
-): Promise<string> {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+async function callClaude(model: string, messages: ClaudeMessage[]): Promise<string> {
+  const response = await fetch('/api/generate', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model,
-      max_tokens: 8192,
       system: SWIM_COACH_SYSTEM_PROMPT,
       messages,
     }),
@@ -66,7 +56,6 @@ async function callClaude(
 }
 
 function parseJSON<T>(raw: string): T {
-  // Strip markdown fences if present
   const cleaned = raw
     .replace(/^```(?:json)?\s*/i, '')
     .replace(/\s*```\s*$/, '')
@@ -115,7 +104,6 @@ function normalizeSession(raw: RawSession, extra?: Partial<Session>): Session {
 }
 
 export async function generateSession(
-  apiKey: string,
   model: string,
   profile: AthleteProfile,
   focus: string,
@@ -130,13 +118,12 @@ REQUEST: Generate a single training session with focus: ${focus}${requestText}
 
 Return ONLY a single JSON session object matching the output format. No extra text.`;
 
-  const raw = await callClaude(apiKey, model, [{ role: 'user', content: userMessage }]);
+  const raw = await callClaude(model, [{ role: 'user', content: userMessage }]);
   const parsed = parseJSON<RawSession>(raw);
   return normalizeSession(parsed, { focus, specialRequests });
 }
 
 export async function generateWeeklyPlan(
-  apiKey: string,
   model: string,
   profile: AthleteProfile,
   phase: string,
@@ -151,9 +138,8 @@ REQUEST: Generate a full Mon–Sat weekly training plan for the ${phase} phase.$
 
 Return ONLY a JSON array of 6 session objects (Monday through Saturday). No extra text.`;
 
-  const raw = await callClaude(apiKey, model, [{ role: 'user', content: userMessage }]);
+  const raw = await callClaude(model, [{ role: 'user', content: userMessage }]);
   const parsed = parseJSON<RawSession[]>(raw);
-
   const sessions = parsed.map((s) => normalizeSession(s));
 
   return {
@@ -166,7 +152,6 @@ Return ONLY a JSON array of 6 session objects (Monday through Saturday). No extr
 }
 
 export async function refineSession(
-  apiKey: string,
   model: string,
   profile: AthleteProfile,
   session: Session,
@@ -183,13 +168,12 @@ REFINEMENT INSTRUCTION: ${instruction}
 
 Return ONLY the modified session as a single JSON object matching the original format (with day, focus, energy_system, total_volume_m, sets). No extra text.`;
 
-  const raw = await callClaude(apiKey, model, [{ role: 'user', content: userMessage }]);
+  const raw = await callClaude(model, [{ role: 'user', content: userMessage }]);
   const parsed = parseJSON<RawSession>(raw);
   return { ...normalizeSession(parsed), id: session.id, createdAt: session.createdAt };
 }
 
 export async function refineWeeklyPlan(
-  apiKey: string,
   model: string,
   profile: AthleteProfile,
   plan: WeeklyPlan,
@@ -206,7 +190,7 @@ REFINEMENT INSTRUCTION: ${instruction}
 
 Return ONLY the modified plan as a JSON array of 6 session objects. No extra text.`;
 
-  const raw = await callClaude(apiKey, model, [{ role: 'user', content: userMessage }]);
+  const raw = await callClaude(model, [{ role: 'user', content: userMessage }]);
   const parsed = parseJSON<RawSession[]>(raw);
   const sessions = parsed.map((s) => normalizeSession(s));
 

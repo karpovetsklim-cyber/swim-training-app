@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Zap, Calendar, Clock, AlertTriangle } from 'lucide-react';
-import { getWorkouts, getProfile, getSettings } from '../lib/storage';
+import { Zap, Calendar, Clock } from 'lucide-react';
+import { getWorkouts, getProfile } from '../lib/storage';
 import type { SavedWorkout } from '../types';
 import ScrollExpandMedia from '../components/blocks/scroll-expansion-hero';
 
@@ -44,8 +44,6 @@ function RecentCard({ workout }: { workout: SavedWorkout }) {
 export function Dashboard() {
   const workouts = getWorkouts().slice(0, 8);
   const profile = getProfile();
-  const settings = getSettings();
-  const hasKey = !!settings.apiKey;
 
   return (
     <ScrollExpandMedia
@@ -60,22 +58,6 @@ export function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Quick actions + recent */}
           <div className="lg:col-span-2 space-y-6">
-            {!hasKey && (
-              <div className="flex items-start gap-3 border border-amber-900/40 bg-amber-950/20 rounded-xl px-4 py-3">
-                <AlertTriangle size={16} className="text-amber-500/70 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-amber-400/80">API key required</p>
-                  <p className="text-xs text-slate-600 mt-0.5">
-                    Add your Anthropic API key in{' '}
-                    <Link to="/settings" className="text-slate-400 hover:text-slate-200 underline underline-offset-2">
-                      Settings
-                    </Link>{' '}
-                    to generate workouts.
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Greeting */}
             <div>
               <p className="font-mono text-[10px] text-slate-600 uppercase tracking-[0.2em] mb-1">

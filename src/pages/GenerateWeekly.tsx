@@ -29,16 +29,11 @@ export function GenerateWeekly() {
   const profile = getProfile();
 
   async function handleGenerate() {
-    if (!settings.apiKey) {
-      setError('No API key set. Please add your Anthropic API key in Settings.');
-      return;
-    }
     setLoading(true);
     setError(null);
     setSaved(false);
     try {
       const result = await generateWeeklyPlan(
-        settings.apiKey,
         settings.model,
         profile,
         phase,
@@ -53,11 +48,11 @@ export function GenerateWeekly() {
   }
 
   async function handleRefine(instruction: string) {
-    if (!plan || !settings.apiKey) return;
+    if (!plan) return;
     setRefining(true);
     setError(null);
     try {
-      const result = await refineWeeklyPlan(settings.apiKey, settings.model, profile, plan, instruction);
+      const result = await refineWeeklyPlan(settings.model, profile, plan, instruction);
       setPlan(result);
       setSaved(false);
     } catch (err) {

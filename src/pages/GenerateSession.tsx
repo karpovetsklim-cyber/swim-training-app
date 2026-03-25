@@ -32,17 +32,12 @@ export function GenerateSession() {
   const profile = getProfile();
 
   async function handleGenerate() {
-    if (!settings.apiKey) {
-      setError('No API key set. Please add your Anthropic API key in Settings.');
-      return;
-    }
     setLoading(true);
     setError(null);
     setRawError(null);
     setSaved(false);
     try {
       const result = await generateSession(
-        settings.apiKey,
         settings.model,
         profile,
         focus,
@@ -57,12 +52,12 @@ export function GenerateSession() {
   }
 
   async function handleRefine(instruction: string) {
-    if (!session || !settings.apiKey) return;
+    if (!session) return;
     setRefining(true);
     setError(null);
     setRawError(null);
     try {
-      const result = await refineSession(settings.apiKey, settings.model, profile, session, instruction);
+      const result = await refineSession(settings.model, profile, session, instruction);
       setSession(result);
       setSaved(false);
     } catch (err) {

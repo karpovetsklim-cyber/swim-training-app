@@ -59,7 +59,6 @@ export type SessionFocus =
 export type TrainingPhase = 'BASE' | 'BUILD' | 'TAPER' | 'RECOVERY';
 
 export type AppSettings = {
-  apiKey: string;
   theme: 'dark' | 'light';
   model: string;
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
+import { Check, Plus, Trash2 } from 'lucide-react';
 import { getProfile, saveProfile, getSettings, saveSettings } from '../lib/storage';
 import type { AthleteProfile, AppSettings } from '../types';
 
@@ -43,7 +43,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function Settings() {
   const [profile, setProfile] = useState<AthleteProfile>(getProfile);
   const [settings, setSettings] = useState<AppSettings>(getSettings);
-  const [showKey, setShowKey] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [newEvent, setNewEvent] = useState({ key: '', bestTimeS: 0, priority: 'A' as 'A' | 'B' | 'C' });
@@ -97,35 +96,14 @@ export function Settings() {
       <div>
         <p className="font-mono text-[10px] text-slate-600 uppercase tracking-[0.2em] mb-1">Configuration</p>
         <h1 className="text-3xl font-extralight text-slate-100 tracking-wide">Settings</h1>
-        <p className="text-sm text-slate-500 mt-1">Manage your profile and API configuration.</p>
+        <p className="text-sm text-slate-500 mt-1">Manage your athlete profile and model preference.</p>
       </div>
 
-      {/* API Settings */}
+      {/* Model Settings */}
       <div className="border border-slate-800/60 rounded-xl bg-slate-900/40 backdrop-blur-sm p-5 space-y-4">
-        <SectionTitle>API Configuration</SectionTitle>
+        <SectionTitle>Model</SectionTitle>
 
-        <Field label="Anthropic API Key">
-          <div className="relative">
-            <input
-              type={showKey ? 'text' : 'password'}
-              value={settings.apiKey}
-              onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })}
-              placeholder="sk-ant-..."
-              className={INPUT_CLS + ' pr-10'}
-            />
-            <button
-              onClick={() => setShowKey(!showKey)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400"
-            >
-              {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
-          </div>
-          <p className="font-mono text-[10px] text-slate-700 uppercase tracking-wider mt-1.5">
-            Stored locally · never sent anywhere except Anthropic
-          </p>
-        </Field>
-
-        <Field label="Model">
+        <Field label="Claude Model">
           <select
             value={settings.model}
             onChange={(e) => setSettings({ ...settings, model: e.target.value })}
@@ -135,6 +113,9 @@ export function Settings() {
               <option key={m.value} value={m.value}>{m.label}</option>
             ))}
           </select>
+          <p className="font-mono text-[10px] text-slate-700 uppercase tracking-wider mt-1.5">
+            API key is configured server-side
+          </p>
         </Field>
 
         <button onClick={handleSaveSettings} className={SAVE_BTN(settingsSaved)}>

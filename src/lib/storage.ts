@@ -26,10 +26,10 @@ export function saveProfile(profile: AthleteProfile): void {
 export function getSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(KEYS.SETTINGS);
-    const defaults: AppSettings = { apiKey: '', theme: 'dark', model: DEFAULT_MODEL };
+    const defaults: AppSettings = { theme: 'dark', model: DEFAULT_MODEL };
     return raw ? { ...defaults, ...(JSON.parse(raw) as Partial<AppSettings>) } : defaults;
   } catch {
-    return { apiKey: '', theme: 'dark', model: DEFAULT_MODEL };
+    return { theme: 'dark', model: DEFAULT_MODEL };
   }
 }
 
