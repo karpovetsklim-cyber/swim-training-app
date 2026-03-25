@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Navbar } from './Navbar';
 
 interface Ripple {
@@ -8,6 +10,7 @@ interface Ripple {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0, opacity: 0 });
   const [ripples, setRipples] = useState<Ripple[]>([]);
 
@@ -84,9 +87,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Content layer */}
       <div className="relative z-10">
         <Navbar />
-        <main className="max-w-6xl mx-auto px-4 pt-20 pb-16">
-          {children}
-        </main>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+          >
+            {location.pathname === '/dashboard' ? (
+              children
+            ) : (
+              <main className="max-w-6xl mx-auto px-4 pt-20 pb-16">
+                {children}
+              </main>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
